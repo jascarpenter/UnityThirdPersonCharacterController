@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -116,22 +117,26 @@ public class PlayerStateMachine : MonoBehaviour
     private void Start()
     {
         _mainCameraTransform = Camera.main.transform;
+        _characterController.Move(_appliedMovement * Time.deltaTime);
     }
 
     private void Update()
     {
+        _currentState.UpdateStates();  
+        HandleMovement();
         HandleRotation();
-        _currentState.UpdateStates();
+        // _appliedMovement.x = _isRunPressed ? _currentMovementInput.x * _runMultipier : _currentMovementInput.x;
+        // _appliedMovement.z = _isRunPressed ? _currentMovementInput.y * _runMultipier : _currentMovementInput.y;
 
-        _appliedMovement.x = _isRunPressed ? _currentMovementInput.x * _runMultipier : _currentMovementInput.x;
-        _appliedMovement.z = _isRunPressed ? _currentMovementInput.y * _runMultipier : _currentMovementInput.y;
-
-        _characterController.Move(_appliedMovement * Time.deltaTime);
+        _characterController.Move((_appliedMovement) * Time.deltaTime);
+        
+        
     }
 
     private void OnMovementInput(InputAction.CallbackContext context)
     {
         _currentMovementInput = context.ReadValue<Vector2>();
+
         _currentMovement.x = _currentMovementInput.x;
         _currentMovement.z = _currentMovementInput.y;
     
@@ -162,9 +167,9 @@ public class PlayerStateMachine : MonoBehaviour
     {
         Vector3 positionToLookAt;
 
-        positionToLookAt.x = _currentMovement.x;
+        positionToLookAt.x = AppliedMovementX;
         positionToLookAt.y = 0.0f;
-        positionToLookAt.z = _currentMovement.z;
+        positionToLookAt.z = AppliedMovementZ;
 
         Quaternion currentRotation = transform.rotation;
 
@@ -175,30 +180,44 @@ public class PlayerStateMachine : MonoBehaviour
         }
     }
 
-    public void MovePlayerRelativeToCamera()
+    private void HandleMovement()
     {
-        float playerVerticalInput = Input.GetAxis("Vertical");
-        float playerHorizontalInput = Input.GetAxis("Horizontal");
-
         Vector3 forward = _mainCameraTransform.forward;
         Vector3 right = _mainCameraTransform.right;
+        forward.y = 0.0f;
+        right.y = 0.0f;
+        forward = forward.normalized;
+        right = right.normalized;
 
-        forward.y = 0f;
-        right.y = 0f;
-
-        forward.Normalize();
-        right.Normalize();
-
-        // forward = forward.normalized;
-        // right = right.normalized;
-
-        Vector3 forwardRelativeVerticalInput = playerVerticalInput * forward;
-        Vector3 rightRelativeVerticalInput = playerHorizontalInput * forward; 
-
-        Vector3 cameraRelativeMovement = forwardRelativeVerticalInput + rightRelativeVerticalInput;
-
-        transform.Translate(cameraRelativeMovement, Space.World);
+        float currentGravity = _appliedMovement.y;
+        _appliedMovement = AppliedMovementX * right + AppliedMovementZ * forward;
+        _appliedMovement.y = currentGravity;
     }
+
+    // public void MovePlayerRelativeToCamera()
+    // {
+    //     float playerVerticalInput = Input.GetAxis("Vertical");
+    //     float playerHorizontalInput = Input.GetAxis("Horizontal");
+
+    //     Vector3 forward = _mainCameraTransform.forward;
+    //     Vector3 right = _mainCameraTransform.right;
+
+    //     forward.y = 0f;
+    //     right.y = 0f;
+
+    //     // forward.Normalize();
+    //     // right.Normalize();
+
+    //     forward = forward.normalized;
+    //     right = right.normalized;
+
+    //     Vector3 forwardRelativeVerticalInput = playerVerticalInput * forward;
+    //     Vector3 rightRelativeVerticalInput = playerHorizontalInput * forward; 
+
+    //     Vector3 cameraRelativeMovement = forwardRelativeVerticalInput + rightRelativeVerticalInput;
+
+    //     transform.Translate(cameraRelativeMovement, Space.World);
+    // }
 
     private void OnEnable()
     {

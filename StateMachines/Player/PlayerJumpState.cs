@@ -53,24 +53,21 @@ public class PlayerJumpState : PlayerBaseState, IRootState
 
     public override void InitializeSubState()
     {
-        // if (Ctx.CharacterController.isGrounded && !Ctx.IsMovementPressed && !Ctx.IsRunPressed)
-        // {
-        //     SetSubState(Factory.Idle());
-        // } else if (Ctx.CharacterController.isGrounded && Ctx.IsMovementPressed && !Ctx.IsRunPressed)
-        // {
-        //     SetSubState(Factory.Walk());
-        // } else if (Ctx.CharacterController.isGrounded && Ctx.IsMovementPressed && Ctx.IsRunPressed)
-        // {
-        //     SetSubState(Factory.Run());
-        // }
-        // else 
-        // {
-        //     SetSubState(Factory.Fall());
-        // }
-
-        if (!Ctx.CharacterController.isGrounded)
+        if (!Ctx.IsMovementPressed && !Ctx.IsRunPressed)
         {
-            
+            SetSubState(Factory.Idle());
+        }
+        else if (Ctx.IsMovementPressed && !Ctx.IsRunPressed)
+        {
+            SetSubState(Factory.Walk());
+        }
+        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
+        {
+            SetSubState(Factory.Run());
+        }
+        else 
+        {
+            SetSubState(Factory.Fall());
         }
     }
 
