@@ -15,6 +15,7 @@ public class PlayerGroundedState : PlayerBaseState, IRootState
 
     public override void EnterState()
     {
+        // Ctx.Animator.SetBool(Ctx.IsLandingHash, true);
         InitializeSubState();
         HandleGravity();
     }

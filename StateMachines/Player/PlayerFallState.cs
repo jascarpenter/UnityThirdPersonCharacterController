@@ -19,14 +19,15 @@ public class PlayerFallState : PlayerBaseState, IRootState
     public override void EnterState()
     {
         // Ctx.Animator.CrossFadeInFixedTime(FreeFallHash, CrossFadeDuration);
+        InitializeSubState();
         Ctx.Animator.SetBool(Ctx.IsFallingHash, true);
     }
 
     public override void UpdateState()
     {
-        InitializeSubState();
+        // InitializeSubState();
         HandleGravity();
-        // HandleFall();
+        // HandleHighFall();
         CheckSwitchStates();
     }
 
@@ -37,9 +38,18 @@ public class PlayerFallState : PlayerBaseState, IRootState
 
     public override void CheckSwitchStates()
     {
+        if (Ctx.AppliedMovementY <= Ctx.HighFallTrigger)
+        {
+            // Ctx.Animator.CrossFadeInFixedTime(JumpLandAirborneHash, CrossFadeDuration);
+            Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
+        }
+
         if (Ctx.CharacterController.isGrounded)
         {
+            Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, false);
             Ctx.Animator.CrossFadeInFixedTime(JumpLandGroundedHash, CrossFadeDuration);
+            // Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
+            // Ctx.Animator.SetBool(Ctx.IsLandingHash, true);
             SwitchState(Factory.Grounded());
         }
     }
@@ -52,21 +62,21 @@ public class PlayerFallState : PlayerBaseState, IRootState
         } 
         else if (Ctx.IsMovementPressed && !Ctx.IsRunPressed)
         {
-            Ctx.AppliedMovementX = 0;
-            Ctx.AppliedMovementZ = 0;
+            // Ctx.AppliedMovementX = 0;
+            // Ctx.AppliedMovementZ = 0;
             SetSubState(Factory.Walk());
         } 
         else 
         {
-            Ctx.AppliedMovementX = 0;
-            Ctx.AppliedMovementZ = 0;
+            // Ctx.AppliedMovementX = 0;
+            // Ctx.AppliedMovementZ = 0;
             SetSubState(Factory.Run());
         }
     }
 
-    // private void HandleFall()
+    // private void HandleHighFall()
     // {
-    //     if ((Ctx.AppliedMovementY >= -2f))
+    //     if ((Ctx.AppliedMovementY >= HighFallTirgger))
     //     {
     //         Ctx.Animator.CrossFadeInFixedTime(JumpLandAirborneHash, CrossFadeDuration);
     //     }

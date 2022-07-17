@@ -79,8 +79,8 @@ public class PlayerJumpState : PlayerBaseState, IRootState
 
     public void HandleGravity()
     {
-        bool isFalling = Ctx.CurrentMovementY <= 0.0f || !Ctx.IsJumpPressed;
-        bool isLanding = Ctx.CurrentMovementY <= -3.0f;
+        bool isFalling = Ctx.CurrentMovementY <= Ctx.Zero || !Ctx.IsJumpPressed;
+        bool isLanding = Ctx.CurrentMovementY <= Ctx.HighFallTrigger;
         float fallMultiplier = 2.0f;
 
         if (isFalling)

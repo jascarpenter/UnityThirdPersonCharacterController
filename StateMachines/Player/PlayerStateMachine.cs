@@ -6,50 +6,45 @@ using UnityEngine.InputSystem;
 
 public class PlayerStateMachine : MonoBehaviour
 {
-    // getters and setters
-    public PlayerBaseState CurrentState { get { return _currentState; } set { _currentState = value; } }
-    public Animator Animator { get { return _animator; } }
-    public CharacterController CharacterController { get { return _characterController; } }
-    public Transform MainCameraTransform { get { return _mainCameraTransform; } }
-    // Hashes
-    public int IsWalkingHash { get { return _isWalkingHash; } }
-    public int IsRunningHash { get { return _isRunningHash; } }
-    public int IsJumpAnticipatingHash { get { return _isJumpAnticipatingHash; } }
-    public int IsJumpingHash { get { return _isJumpingHash; } }
-    public int IsFallingHash { get { return _isFallingHash; } }
-    public int IsLandAnticipatingHash { get { return _isLandAnticipatingHash; } }
-    public int IsLandingHash { get { return _isLandingHash; } }
-    // Movement input
-    public bool IsMovementPressed { get { return _isMovementPressed; } }
-    public bool IsRunPressed { get { return _isRunPressed; } }
-    public float CurrentMovementY { get { return _currentMovement.y; } set { _currentMovement.y = value; } }
-    public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = value; } }
-    public float AppliedMovementX { get { return _appliedMovement.x; } set { _appliedMovement.x = value; } }
-    public float AppliedMovementZ { get { return _appliedMovement.z; } set { _appliedMovement.z = value; } }
-    public float RunMulitiplier { get { return _runMultipier; } }
-    public Vector2 CurrentMovementInput { get { return _currentMovementInput; } }
-    // Jumping
-    public bool IsJumping { set { _isJumping = value; } }
-    public bool IsJumpAnimating { set { _isJumpAnimating = value; } }
-    public bool IsJumpPressed { get { return _isJumpPressed; } }
-    public bool RequireNewJumpPress { get { return _requireNewJumpPress; } set { _requireNewJumpPress = value; } }
-    public float InitialJumpVelocity { get { return _initialJumpVelocity; } }
-    public float MaxJumpHeight { set { _maxJumpHeight = value; } }
-    public float MaxJumpTime { set { _maxJumpTime = value; } }
-    // Gravity
-    // public float GroundedGravity { get { return _groundedGravity; } set { _groundedGravity = value;} }
-    public float Gravity { get { return _gravity; } set { _gravity = value;} }
-
-    // variables
+    // states
     PlayerBaseState _currentState;
     PlayerStateFactory _states;
 
+    // references
     PlayerInput _playerInput;
     CharacterController _characterController;
     Animator _animator;
-
     private Transform _mainCameraTransform;
 
+    // player input values
+    Vector2 _currentMovementInput;
+    Vector3 _currentMovement;
+    Vector3 _currentRunMovement;
+    Vector3 _appliedMovement;
+    bool _isMovementPressed;
+    bool _isRunPressed;
+
+    // jumping
+    bool _isJumpPressed = false;
+    bool _requireNewJumpPress = false;
+    bool _isJumping = false;
+    bool _isJumpAnimating = false;
+    private float _initialJumpVelocity;
+    [SerializeField] private float _maxJumpHeight = 1.0f;
+    [SerializeField] private float _maxJumpTime = 0.75f;
+
+    // gravity
+    private float _gravity = -9.8f;
+    // [SerializeField] private float _groundedGravity = -0.5f;
+    [SerializeField] private float _highFallTrigger = -3f;
+    private int _zero = 0;
+
+    // optimization
+    [SerializeField] private float _rotationFactorPerFrame = 15f;
+    [SerializeField] private float _runMultipier = 3.0f;
+    private const float CrossFadeDuration = 0.1f;
+
+    // strings to hashes
     int _isWalkingHash;
     int _isRunningHash;
     int _isJumpAnticipatingHash;
@@ -59,29 +54,44 @@ public class PlayerStateMachine : MonoBehaviour
     int _isLandingHash;
 
     private readonly int _jumpStartGroundedHash = Animator.StringToHash("JumpStartGrounded");
-    
-    private const float CrossFadeDuration = 0.1f;
 
-    Vector2 _currentMovementInput;
-    Vector3 _currentMovement;
-    Vector3 _currentRunMovement;
-    Vector3 _appliedMovement;
-
-    bool _isMovementPressed;
-    bool _isRunPressed = false;
-    bool _isJumpPressed = false;
-    bool _requireNewJumpPress = false;
-
-    private float _initialJumpVelocity;
-    [SerializeField] private float _rotationFactorPerFrame = 15f;
-    [SerializeField] private float _runMultipier = 3.0f;
-    // [SerializeField] private float _groundedGravity = -0.5f;
-    [SerializeField] private float _gravity = -9.8f;
-    [SerializeField] private float _maxJumpHeight = 1.0f;
-    [SerializeField] private float _maxJumpTime = 0.75f;
-
-    bool _isJumping = false;
-    bool _isJumpAnimating = false;
+    // getters and setters
+    // references and states
+    public PlayerBaseState CurrentState { get { return _currentState; } set { _currentState = value; } }
+    public CharacterController CharacterController { get { return _characterController; } }
+    public Animator Animator { get { return _animator; } }
+    public Transform MainCameraTransform { get { return _mainCameraTransform; } }
+    // player input values
+    public Vector2 CurrentMovementInput { get { return _currentMovementInput; } }
+    public float CurrentMovementY { get { return _currentMovement.y; } set { _currentMovement.y = value; } }
+    public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = value; } }
+    public float AppliedMovementX { get { return _appliedMovement.x; } set { _appliedMovement.x = value; } }
+    public float AppliedMovementZ { get { return _appliedMovement.z; } set { _appliedMovement.z = value; } }
+    public bool IsMovementPressed { get { return _isMovementPressed; } }
+    public bool IsRunPressed { get { return _isRunPressed; } }
+    // Jumping
+    public bool IsJumpPressed { get { return _isJumpPressed; } }
+    public bool RequireNewJumpPress { get { return _requireNewJumpPress; } set { _requireNewJumpPress = value; } }
+    public bool IsJumping { set { _isJumping = value; } }
+    public bool IsJumpAnimating { set { _isJumpAnimating = value; } }
+    public float InitialJumpVelocity { get { return _initialJumpVelocity; } }
+    public float MaxJumpHeight { set { _maxJumpHeight = value; } }
+    public float MaxJumpTime { set { _maxJumpTime = value; } }
+    // Gravity
+    // public float GroundedGravity { get { return _groundedGravity; } set { _groundedGravity = value;} }
+    public float Gravity { get { return _gravity; } set { _gravity = value;} }
+    public float HighFallTrigger { get { return _highFallTrigger; } set { _highFallTrigger = value;} }
+    public int Zero { get { return _zero; } set { _zero = value;} }
+    // optimization
+    public float RunMulitiplier { get { return _runMultipier; } }
+    // string to hashes
+    public int IsWalkingHash { get { return _isWalkingHash; } }
+    public int IsRunningHash { get { return _isRunningHash; } }
+    public int IsJumpAnticipatingHash { get { return _isJumpAnticipatingHash; } }
+    public int IsJumpingHash { get { return _isJumpingHash; } }
+    public int IsFallingHash { get { return _isFallingHash; } }
+    public int IsLandAnticipatingHash { get { return _isLandAnticipatingHash; } }
+    public int IsLandingHash { get { return _isLandingHash; } }
 
     private void Awake()
     {
@@ -122,33 +132,28 @@ public class PlayerStateMachine : MonoBehaviour
 
     private void Update()
     {
-        DebugBools();
-        _currentState.UpdateStates();  
+        _currentState.UpdateStates(); 
         HandleMovement();
         HandleRotation();
         // _appliedMovement.x = _isRunPressed ? _currentMovementInput.x * _runMultipier : _currentMovementInput.x;
         // _appliedMovement.z = _isRunPressed ? _currentMovementInput.y * _runMultipier : _currentMovementInput.y;
 
         _characterController.Move((_appliedMovement) * Time.deltaTime);
-        
-        
-    }
-
-    private void DebugBools()
-    {
-        Debug.Log(Animator.GetBool(IsLandingHash));
     }
 
     private void OnMovementInput(InputAction.CallbackContext context)
     {
         _currentMovementInput = context.ReadValue<Vector2>();
+        _isMovementPressed = _currentMovementInput.x != _zero || _currentMovementInput.y != _zero;
 
-        _currentMovement.x = _currentMovementInput.x;
-        _currentMovement.z = _currentMovementInput.y;
+        // _currentMovementInput = context.ReadValue<Vector2>();
+
+        // _currentMovement.x = _currentMovementInput.x;
+        // _currentMovement.z = _currentMovementInput.y;
     
-        _currentRunMovement.x = _currentMovementInput.x * _runMultipier;
-        _currentRunMovement.z = _currentMovementInput.y * _runMultipier;
-        _isMovementPressed = _currentMovementInput.x != 0 || _currentMovementInput.y != 0;
+        // _currentRunMovement.x = _currentMovementInput.x * _runMultipier;
+        // _currentRunMovement.z = _currentMovementInput.y * _runMultipier;
+        // _isMovementPressed = _currentMovementInput.x != _zero || _currentMovementInput.y != _zero;
     }
 
     private void OnRun(InputAction.CallbackContext context)
@@ -169,35 +174,36 @@ public class PlayerStateMachine : MonoBehaviour
         _initialJumpVelocity = (2 * _maxJumpHeight) / timeToApex;
     }
 
+    private void HandleMovement()
+    {
+        Vector3 forward = _mainCameraTransform.forward;
+        Vector3 right = _mainCameraTransform.right;
+        forward.y = _zero;
+        right.y = _zero;
+
+        forward.Normalize();
+        right.Normalize();
+
+        float currentGravity = _appliedMovement.y;
+        _appliedMovement = AppliedMovementX * right + AppliedMovementZ * forward;
+        _appliedMovement.y = currentGravity;
+    }
+
     private void HandleRotation()
     {
         Vector3 positionToLookAt;
 
         positionToLookAt.x = AppliedMovementX;
-        positionToLookAt.y = 0.0f;
+        positionToLookAt.y = _zero;
         positionToLookAt.z = AppliedMovementZ;
 
         Quaternion currentRotation = transform.rotation;
 
-        if (_isMovementPressed)
+        if (_isMovementPressed && positionToLookAt != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(positionToLookAt);
             transform.rotation = Quaternion.Slerp(currentRotation, targetRotation, _rotationFactorPerFrame * Time.deltaTime);
         }
-    }
-
-    private void HandleMovement()
-    {
-        Vector3 forward = _mainCameraTransform.forward;
-        Vector3 right = _mainCameraTransform.right;
-        forward.y = 0.0f;
-        right.y = 0.0f;
-        forward = forward.normalized;
-        right = right.normalized;
-
-        float currentGravity = _appliedMovement.y;
-        _appliedMovement = AppliedMovementX * right + AppliedMovementZ * forward;
-        _appliedMovement.y = currentGravity;
     }
 
     // public void MovePlayerRelativeToCamera()
