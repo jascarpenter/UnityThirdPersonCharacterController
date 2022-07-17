@@ -21,7 +21,6 @@ public class PlayerJumpState : PlayerBaseState, IRootState
 
     public override void EnterState()
     {
-        Debug.Log("I am in JUMP state");
         InitializeSubState();
         HandleJump();
     }
@@ -61,13 +60,9 @@ public class PlayerJumpState : PlayerBaseState, IRootState
         {
             SetSubState(Factory.Walk());
         }
-        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
+        else
         {
             SetSubState(Factory.Run());
-        }
-        else 
-        {
-            SetSubState(Factory.Fall());
         }
     }
 

@@ -18,7 +18,6 @@ public class PlayerFallState : PlayerBaseState, IRootState
 
     public override void EnterState()
     {
-        Debug.Log("I am in FALL state");
         // Ctx.Animator.CrossFadeInFixedTime(FreeFallHash, CrossFadeDuration);
         Ctx.Animator.SetBool(Ctx.IsFallingHash, true);
     }
@@ -57,7 +56,7 @@ public class PlayerFallState : PlayerBaseState, IRootState
             Ctx.AppliedMovementZ = 0;
             SetSubState(Factory.Walk());
         } 
-        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
+        else 
         {
             Ctx.AppliedMovementX = 0;
             Ctx.AppliedMovementZ = 0;

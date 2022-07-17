@@ -17,7 +17,7 @@ public class PlayerWalkState : PlayerBaseState
     {
         Ctx.Animator.SetBool(Ctx.IsWalkingHash, true);
         Ctx.Animator.SetBool(Ctx.IsRunningHash, false);
-        InitializeSubState();
+        // InitializeSubState();
     }
 
     public override void UpdateState()
@@ -38,7 +38,8 @@ public class PlayerWalkState : PlayerBaseState
         if (!Ctx.IsMovementPressed)
         {
             SwitchState(Factory.Idle());
-        } else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
+        } 
+        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
         {
             SwitchState(Factory.Run());
         }
@@ -47,6 +48,6 @@ public class PlayerWalkState : PlayerBaseState
     public override void InitializeSubState()
     {
         
-        Ctx.Animator.CrossFadeInFixedTime(WalkHash, CrossFadeDuration);
+        // Ctx.Animator.CrossFadeInFixedTime(WalkHash, CrossFadeDuration);
     }
 }

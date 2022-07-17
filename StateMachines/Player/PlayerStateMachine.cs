@@ -122,6 +122,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     private void Update()
     {
+        DebugBools();
         _currentState.UpdateStates();  
         HandleMovement();
         HandleRotation();
@@ -131,6 +132,11 @@ public class PlayerStateMachine : MonoBehaviour
         _characterController.Move((_appliedMovement) * Time.deltaTime);
         
         
+    }
+
+    private void DebugBools()
+    {
+        Debug.Log(Animator.GetBool(IsLandingHash));
     }
 
     private void OnMovementInput(InputAction.CallbackContext context)
