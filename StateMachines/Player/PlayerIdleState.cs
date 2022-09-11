@@ -4,33 +4,20 @@ using UnityEngine;
 
 public class PlayerIdleState : PlayerBaseState
 {
-    private readonly int IdleHash = Animator.StringToHash("Idle");
-
-    private const float CrossFadeDuration = 0.1f;
-
-    public PlayerIdleState(PlayerStateMachine currentContext, PlayerStateFactory playerStateFactory) : base (currentContext, playerStateFactory)
-    {
-
-    }
+    public PlayerIdleState(PlayerStateMachine currentContext, PlayerStateFactory playerStateFactory) : base (currentContext, playerStateFactory) { }
 
     public override void EnterState()
     {
+        Debug.Log("Hello from IDLE");
         Ctx.Animator.SetBool(Ctx.IsWalkingHash, false);
         Ctx.Animator.SetBool(Ctx.IsRunningHash, false);
-        // InitializeSubState();
         Ctx.AppliedMovementX = 0;
         Ctx.AppliedMovementZ = 0;
     }
 
     public override void UpdateState()
     {
-        // Ctx.Animator.SetBool(Ctx.IsWalkingHash, false);
         CheckSwitchStates();
-    }
-
-    public override void ExitState()
-    {
-
     }
 
     public override void CheckSwitchStates()
@@ -38,14 +25,14 @@ public class PlayerIdleState : PlayerBaseState
         if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
         {
             SwitchState(Factory.Run());
-        } else if (Ctx.IsMovementPressed)
+        } 
+        else if (Ctx.IsMovementPressed)
         {
             SwitchState(Factory.Walk());
         }
-    }
+    }   
 
-    public override void InitializeSubState()
-    {
-        // Ctx.Animator.CrossFadeInFixedTime(IdleHash, CrossFadeDuration);
-    }
+    public override void ExitState() { }
+
+    public override void InitializeSubState() { }
 }

@@ -8,14 +8,11 @@ public class PlayerRunState : PlayerBaseState
 
     private const float CrossFadeDuration = 0.1f;
 
-    public PlayerRunState(PlayerStateMachine currentContext, PlayerStateFactory playerStateFactory) : base (currentContext, playerStateFactory)
-    {
-
-    }
+    public PlayerRunState(PlayerStateMachine currentContext, PlayerStateFactory playerStateFactory) : base (currentContext, playerStateFactory) { }
 
     public override void EnterState()
     {
-        // InitializeSubState();
+        Debug.Log("Hello from RUN");
         Ctx.Animator.SetBool(Ctx.IsWalkingHash, true);
         Ctx.Animator.SetBool(Ctx.IsRunningHash, true);
     }
@@ -25,11 +22,6 @@ public class PlayerRunState : PlayerBaseState
         Ctx.AppliedMovementX = Ctx.CurrentMovementInput.x * Ctx.RunMulitiplier;
         Ctx.AppliedMovementZ = Ctx.CurrentMovementInput.y * Ctx.RunMulitiplier;
         CheckSwitchStates();
-    }
-
-    public override void ExitState()
-    {
-
     }
 
     public override void CheckSwitchStates()
@@ -44,8 +36,9 @@ public class PlayerRunState : PlayerBaseState
         }
     }
 
-    public override void InitializeSubState()
-    {
-        // Ctx.Animator.CrossFadeInFixedTime(RunHash, CrossFadeDuration);
-    }
+
+
+    public override void InitializeSubState() { }
+
+    public override void ExitState() { }
 }

@@ -13,40 +13,72 @@ public class PlayerLandState : PlayerBaseState, IRootState
 
     public PlayerLandState(PlayerStateMachine currentContext, PlayerStateFactory playerStateFactory) : base (currentContext, playerStateFactory)
     {
-
+        IsRootState = true;
     }
 
     public override void EnterState()
     {
-        Debug.Log("I am in FALL state");
+        InitializeSubState();
+        Ctx.IsJumping = false;
+        Debug.Log("Hello from LAND");
         // Ctx.Animator.CrossFadeInFixedTime(FreeFallHash, CrossFadeDuration);
-        Ctx.Animator.SetBool(Ctx.IsLandingHash, true);
     }
 
     public override void UpdateState()
     {
         InitializeSubState();
-        HandleGravity();
-        // HandleFall();
+        if (Ctx.IsGrabbingLedge)
+        {
+            DisableGravity();
+        }
+        else
+        {
+            HandleGravity();
+        }
+        // HandleHighFall();
         CheckSwitchStates();
     }
 
     public override void ExitState()
     {
-        Ctx.Animator.SetBool(Ctx.IsLandingHash, false);
+        
     }
 
     public override void CheckSwitchStates()
     {
-        if (Ctx.CharacterController.isGrounded)
+        if (Ctx.IsJumpPressed && !Ctx.RequireNewJumpPress)
         {
+            SwitchState(Factory.Jump());
+        }
+        if (!Ctx.IsJumpPressed && !Ctx.CharacterController.isGrounded)
+        {
+            SwitchState(Factory.Fall());
+        }
+        else if (Ctx.CharacterController.isGrounded)
+        {
+            Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, false);
+            if (!Ctx.IsClimbTeleporting)
+            {
+                Ctx.Animator.CrossFadeInFixedTime(JumpLandGroundedHash, CrossFadeDuration);
+            }
+            Ctx.IsClimbTeleporting = false;
+            // Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
+            // Ctx.Animator.SetBool(Ctx.IsLandingHash, true);
             SwitchState(Factory.Grounded());
+        }
+        else if (Ctx.CanClimbLedge && Ctx.IsClimbPressed)
+        {
+            SwitchState(Factory.ClimbLedge());
+        }
+        else if (Ctx.CanClimbObject && Ctx.IsClimbPressed)
+        {
+            SwitchState(Factory.ClimbObject());
         }
     }
 
     public override void InitializeSubState()
     {
-        if (!Ctx.IsMovementPressed && !Ctx.IsRunPressed)
+        if (!Ctx.IsMovementPressed)
         {
             SetSubState(Factory.Idle());
         } 
@@ -54,15 +86,15 @@ public class PlayerLandState : PlayerBaseState, IRootState
         {
             SetSubState(Factory.Walk());
         } 
-        else 
+        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
         {
             SetSubState(Factory.Run());
         }
     }
 
-    // private void HandleFall()
+    // private void HandleHighFall()
     // {
-    //     if ((Ctx.AppliedMovementY >= -2f))
+    //     if ((Ctx.AppliedMovementY >= HighFallTirgger))
     //     {
     //         Ctx.Animator.CrossFadeInFixedTime(JumpLandAirborneHash, CrossFadeDuration);
     //     }
@@ -70,50 +102,14 @@ public class PlayerLandState : PlayerBaseState, IRootState
 
     public void HandleGravity()
     {
-        float fallMultiplier = 2.0f;
-        
-        float previousYVelocity = Ctx.CurrentMovementY;
-        Ctx.CurrentMovementY = Ctx.CurrentMovementY + (Ctx.Gravity * fallMultiplier * Time.deltaTime);
-        Ctx.AppliedMovementY = Mathf.Max((previousYVelocity + Ctx.CurrentMovementY) * 0.5f, -20.0f);
+        Ctx.CurrentMovementY = Ctx.Gravity;
+        Ctx.AppliedMovementY = Ctx.Gravity;
 
     }
 
-    // public override void EnterState()
-    // {
-    //     // Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
-    // }
-
-    // public override void UpdateState()
-    // {
-    //     // InitializeSubState();
-    //     // HandleGravity();
-    //     // CheckSwitchStates();
-    // }
-
-    // public override void ExitState()
-    // {
-
-    // }
-
-    // public override void CheckSwitchStates()
-    // {
-    //     // if (Ctx.CharacterController.isGrounded)
-    //     // {
-    //     //     SwitchState(Factory.Grounded());
-    //     // }
-    // }
-
-    // public override void InitializeSubState()
-    // {
-
-    // }
-
-    // public void HandleGravity()
-    // {
-    //     // float fallMultiplier = 2.0f;
-        
-    //     // float previousYVelocity = Ctx.CurrentMovementY;
-    //     // Ctx.CurrentMovementY = Ctx.CurrentMovementY + (Ctx.Gravity * fallMultiplier * Time.deltaTime);
-    //     // Ctx.AppliedMovementY = Mathf.Max((previousYVelocity + Ctx.CurrentMovementY) * 0.5f, -20.0f);
-    // }
+    public void DisableGravity()
+    {
+        Ctx.CurrentMovement = Ctx.CurrentMovement * Ctx.Zero;
+        Ctx.AppliedMovement = Ctx.CurrentMovement;
+    }
 }

@@ -18,77 +18,107 @@ public class PlayerFallState : PlayerBaseState, IRootState
 
     public override void EnterState()
     {
-        // Ctx.Animator.CrossFadeInFixedTime(FreeFallHash, CrossFadeDuration);
         InitializeSubState();
+        Ctx.IsLandEntering = false;
+        Debug.Log("Hello from FALL");
         Ctx.Animator.SetBool(Ctx.IsFallingHash, true);
+        // Ctx.Animator.SetTrigger(Ctx.TriggerFallHash);
     }
 
     public override void UpdateState()
     {
-        // InitializeSubState();
-        HandleGravity();
-        // HandleHighFall();
+        if (Ctx.IsLandEntering)
+        {
+            Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
+        }
+
+        if (Ctx.IsGrabbingLedge)
+        {
+            DisableGravity();
+        }
+        else
+        {
+            HandleGravity();
+        }
         CheckSwitchStates();
     }
 
     public override void ExitState()
     {
         Ctx.Animator.SetBool(Ctx.IsFallingHash, false);
+        Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, false);
+        Ctx.IsFalling = false;
+        Ctx.IsLandEntering = false;
     }
 
     public override void CheckSwitchStates()
     {
-        if (Ctx.AppliedMovementY <= Ctx.HighFallTrigger)
-        {
-            // Ctx.Animator.CrossFadeInFixedTime(JumpLandAirborneHash, CrossFadeDuration);
-            Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
-        }
-
         if (Ctx.CharacterController.isGrounded)
         {
-            Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, false);
-            Ctx.Animator.CrossFadeInFixedTime(JumpLandGroundedHash, CrossFadeDuration);
-            // Ctx.Animator.SetBool(Ctx.IsLandAnticipatingHash, true);
-            // Ctx.Animator.SetBool(Ctx.IsLandingHash, true);
-            SwitchState(Factory.Grounded());
+            SwitchState(Factory.Land());
+        }
+
+        if (Ctx.CanClimbLedge && Ctx.IsClimbPressed)
+        {
+            SwitchState(Factory.ClimbLedge());
+        }
+
+        if (Ctx.CanClimbObject && Ctx.IsClimbPressed)
+        {
+            SwitchState(Factory.ClimbObject());
         }
     }
 
     public override void InitializeSubState()
     {
-        if (!Ctx.IsMovementPressed && !Ctx.IsRunPressed)
+        if (!Ctx.IsMovementPressed)
         {
             SetSubState(Factory.Idle());
         } 
         else if (Ctx.IsMovementPressed && !Ctx.IsRunPressed)
         {
-            // Ctx.AppliedMovementX = 0;
-            // Ctx.AppliedMovementZ = 0;
             SetSubState(Factory.Walk());
         } 
-        else 
+        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
         {
-            // Ctx.AppliedMovementX = 0;
-            // Ctx.AppliedMovementZ = 0;
             SetSubState(Factory.Run());
         }
     }
 
-    // private void HandleHighFall()
-    // {
-    //     if ((Ctx.AppliedMovementY >= HighFallTirgger))
-    //     {
-    //         Ctx.Animator.CrossFadeInFixedTime(JumpLandAirborneHash, CrossFadeDuration);
-    //     }
-    // }
-
     public void HandleGravity()
     {
-        float fallMultiplier = 2.0f;
-        
-        float previousYVelocity = Ctx.CurrentMovementY;
-        Ctx.CurrentMovementY = Ctx.CurrentMovementY + (Ctx.Gravity * fallMultiplier * Time.deltaTime);
-        Ctx.AppliedMovementY = Mathf.Max((previousYVelocity + Ctx.CurrentMovementY) * 0.5f, -20.0f);
+        // bool isLandEntering = Ctx.CurrentMovementY <= Ctx.HighFallTrigger;
 
+        // Ctx.AppliedMovementY = (Ctx.CurrentMovementY * Time.deltaTime) + ((Ctx.Gravity * 0.5f) * (Time.deltaTime * Time.deltaTime));
+        // Ctx.CurrentMovementY += (Ctx.Gravity * Time.deltaTime); 
+        // if (isLandEntering) {
+        //     Ctx.IsLandEntering = true;
+        // }
+
+        bool isFalling = Ctx.CurrentMovementY <= Ctx.Zero || !Ctx.IsJumpPressed;
+        bool isLandEntering = Ctx.CurrentMovementY <= Ctx.HighFallTrigger;
+        float fallMultiplier = 2.0f;
+
+        if (isFalling)
+        {
+            float previousYVelocity = Ctx.CurrentMovementY;
+            Ctx.CurrentMovementY = Ctx.CurrentMovementY + (Ctx.Gravity * fallMultiplier * Time.deltaTime);
+            Ctx.AppliedMovementY = Mathf.Max((previousYVelocity + Ctx.CurrentMovementY) * 0.5f, -20.0f);
+            if (isLandEntering) {
+                Ctx.IsLandEntering = true;
+            }
+        } 
+        else
+        {
+            float previousYVelocity = Ctx.CurrentMovementY;
+            Ctx.CurrentMovementY = Ctx.CurrentMovementY + (Ctx.Gravity * Time.deltaTime);
+            Ctx.AppliedMovementY = (previousYVelocity + Ctx.CurrentMovementY) * 0.5f;
+        }
+    }
+
+    public void DisableGravity()
+    {
+        Ctx.CurrentMovement = Ctx.CurrentMovement * Ctx.Zero;
+        Ctx.AppliedMovement = Ctx.CurrentMovement;
     }
 }

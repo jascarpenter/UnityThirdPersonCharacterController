@@ -1,13 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerGroundedState : PlayerBaseState, IRootState
 {
-    private readonly int JumpStartGroundedHash = Animator.StringToHash("JumpStartGrounded");
-    
-    private const float CrossFadeDuration = 0.1f;
-
     public PlayerGroundedState(PlayerStateMachine currentContext, PlayerStateFactory playerStateFactory) : base (currentContext, playerStateFactory)
     {
         IsRootState = true;
@@ -15,9 +12,10 @@ public class PlayerGroundedState : PlayerBaseState, IRootState
 
     public override void EnterState()
     {
-        // Ctx.Animator.SetBool(Ctx.IsLandingHash, true);
+        Debug.Log("Hello from GROUNDED");
         InitializeSubState();
         HandleGravity();
+        ResetAnimBools();
     }
 
     public override void UpdateState()
@@ -40,6 +38,10 @@ public class PlayerGroundedState : PlayerBaseState, IRootState
         {
             SwitchState(Factory.Fall());
         }
+        else if (Ctx.CanClimbObject && Ctx.IsClimbPressed)
+        {
+            SwitchState(Factory.ClimbObject());
+        }
     }
 
     public override void InitializeSubState()
@@ -51,8 +53,8 @@ public class PlayerGroundedState : PlayerBaseState, IRootState
         else if (Ctx.IsMovementPressed && !Ctx.IsRunPressed)
         {
             SetSubState(Factory.Walk());
-        } 
-        else
+        }
+        else if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
         {
             SetSubState(Factory.Run());
         }
@@ -62,5 +64,24 @@ public class PlayerGroundedState : PlayerBaseState, IRootState
     {
         Ctx.CurrentMovementY = Ctx.Gravity;
         Ctx.AppliedMovementY = Ctx.Gravity;
+    }
+
+    private void ResetAnimBools()
+    {
+        foreach(AnimatorControllerParameter parameter in Ctx.Animator.parameters)
+        {            
+            Ctx.Animator.SetBool(parameter.name, false);            
+        }
+
+        if (Ctx.IsMovementPressed && !Ctx.IsRunPressed)
+        {
+            Ctx.Animator.SetBool(Ctx.IsWalkingHash, true);
+        }
+
+        if (Ctx.IsMovementPressed && Ctx.IsRunPressed)
+        {
+            Ctx.Animator.SetBool(Ctx.IsWalkingHash, true);
+            Ctx.Animator.SetBool(Ctx.IsRunningHash, true);
+        }
     }
 }
